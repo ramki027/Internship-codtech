@@ -1,0 +1,94 @@
+"""
+Automated Report Generator
+
+This script:
+1. Reads data from a CSV file
+2. Performs basic analysis
+3. Generates a formatted PDF report using ReportLab
+"""
+
+import pandas as pd
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+# -------------------------------
+#  LOAD DATA
+# -------------------------------
+def load_data(file_path):
+    """
+    Load CSV data into a pandas DataFrame
+    """
+    return pd.read_csv(file_path)
+
+# -------------------------------
+#  ANALYZE DATA
+# -------------------------------
+def analyze_data(df):
+    """
+    Perform basic analysis on dataset
+    """
+    analysis = {
+        "Total Records": len(df),
+        "Average Score": df['Score'].mean(),
+        "Max Score": df['Score'].max(),
+        "Min Score": df['Score'].min()
+    }
+
+    # Group-wise analysis
+    dept_avg = df.groupby('Department')['Score'].mean()
+
+    return analysis, dept_avg
+
+# -------------------------------
+#  GENERATE PDF REPORT
+# -------------------------------
+def generate_pdf(analysis, dept_avg, output_file):
+    """
+    Create a formatted PDF report using ReportLab
+    """
+    doc = SimpleDocTemplate(output_file)
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    # Title
+    content.append(Paragraph("Automated Report", styles['Title']))
+    content.append(Spacer(1, 12))
+
+    # Summary Section
+    content.append(Paragraph("Summary:", styles['Heading2']))
+    for key, value in analysis.items():
+        content.append(Paragraph(f"{key}: {value}", styles['Normal']))
+    
+    content.append(Spacer(1, 12))
+
+    # Department-wise Analysis
+    content.append(Paragraph("Department-wise Average Scores:", styles['Heading2']))
+    for dept, avg in dept_avg.items():
+        content.append(Paragraph(f"{dept}: {round(avg, 2)}", styles['Normal']))
+
+    # Build PDF
+    doc.build(content)
+
+# -------------------------------
+# MAIN FUNCTION
+# -------------------------------
+def main():
+    file_path = "sample_data.csv"
+    output_file = "output_report.pdf"
+
+    df = load_data(file_path)
+    analysis, dept_avg = analyze_data(df)
+    
+    print("Analysis:", analysis)
+    print("Department Averages:", dept_avg)
+
+    generate_pdf(analysis, dept_avg, output_file)
+    print("PDF report generated successfully!")
+
+# Run script
+if __name__ == "__main__":
+    main()
+
+
+
